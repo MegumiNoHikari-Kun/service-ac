@@ -7,8 +7,10 @@ const menus = [
   { label: 'Daftar Order', href: '/orders', icon: '📋' },
   { label: 'Booking Baru', href: '/booking', icon: '➕' },
   { label: 'Data Klien', href: '/klien', icon: '👥' },
+  { label: 'Invoice', href: '/invoice', icon: '🧾' },
   { label: 'Teknisi', href: '/teknisi', icon: '🔧' },
   { label: 'Laporan', href: '/laporan', icon: '📈' },
+  { label: 'Landing Page', href: '/landing', icon: '🌐' },
 ]
 
 export default function Sidebar() {
