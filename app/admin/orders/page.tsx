@@ -3,6 +3,11 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import Link from 'next/link'
 
+type Teknisi = {
+  id: string
+  nama: string
+}
+
 type Order = {
   id: string
   jenis_layanan: string
@@ -10,7 +15,9 @@ type Order = {
   status: string
   total_biaya: number
   created_at: string
+  teknisi_id: string | null
   klien: { nama: string; nomor_wa: string } | null
+  teknisi: { nama: string } | null
 }
 
 const statusColor: Record<string, { bg: string; color: string }> = {
