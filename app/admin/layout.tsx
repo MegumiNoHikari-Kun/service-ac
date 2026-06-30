@@ -1,19 +1,47 @@
-import type { Metadata } from 'next'
-import Sidebar from '../components/Sidebar'
+'use client'
+import { useEffect, useState } from 'react'
+import { supabase } from '../../lib/supabase'
+import { useRouter, usePathname } from 'next/navigation'
+import Sidebar from '../../components/Sidebar'
 
-export const metadata: Metadata = {
-  title: 'Suejuk AC — Dashboard',
-}
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const [checking, setChecking] = useState(true)
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    async function checkAuth() {
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (!session && pathname !== '/admin/login') {
+        router.push('/admin/login')
+      }
+      setChecking(false)
+    }
+    checkAuth()
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session && pathname !== '/admin/login') {
+        router.push('/admin/login')
+      }
+    })
+
+    return () => listener.subscription.unsubscribe()
+  }, [pathname, router])
+
+  if (checking) {
+    return <div style={{ padding: '2rem', color: '#64748b' }}>Memeriksa akses...</div>
+  }
+
+  // Halaman login tidak perlu sidebar
+  if (pathname === '/admin/login') {
+    return <>{children}</>
+  }
+
   return (
-    <html lang="id">
-      <body style={{ margin: 0, display: 'flex', background: '#f8fafc', fontFamily: 'system-ui, sans-serif' }}>
-        <Sidebar />
-        <main style={{ flex: 1, minHeight: '100vh' }}>
-          {children}
-        </main>
-      </body>
-    </html>
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+      <Sidebar />
+      <main style={{ flex: 1, background: '#f8fafc' }}>{children}</main>
+    </div>
   )
 }
