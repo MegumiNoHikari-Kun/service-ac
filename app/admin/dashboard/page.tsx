@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
-import StatCard from '../../components/StatCard'
+import { supabase } from '../../../lib/supabase'
+import StatCard from '../../../components/StatCard'
 
 type Order = {
   id: string
