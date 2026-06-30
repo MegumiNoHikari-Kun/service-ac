@@ -11,14 +11,6 @@ const menus = [
   { label: 'Teknisi', href: '/admin/teknisi', icon: '🔧' },
   { label: 'Invoice', href: '/admin/invoice', icon: '🧾' },
 ]
-Simpan, buka /admin/teknisi. Yang bisa dicoba:
-
-Klik + Tambah Teknisi → isi nama & WA → Simpan
-Klik nama teknisi → lihat order yang sudah ditugaskan ke dia
-Toggle Aktif/Nonaktif untuk teknisi yang sedang cuti
-Di bagian bawah, assign teknisi ke order yang belum punya teknisi
-
-Kabarin hasilnya bro!Ingin
 
 export default function Sidebar() {
   const pathname = usePathname()
