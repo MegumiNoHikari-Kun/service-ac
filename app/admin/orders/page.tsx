@@ -136,6 +136,9 @@ export default function OrdersPage() {
                     <div style={{ fontSize: '12px', color: '#94a3b8' }}>{order.klien?.nomor_wa ?? '-'}</div>
                   </td>
                   <td style={{ padding: '12px 16px', color: '#1e293b' }}>{order.jenis_layanan}</td>
+                  <td style={{ padding: '12px 16px', color: '#64748b' }}>
+                    {new Date(order.tanggal_jadwal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </td>
                   <td style={{ padding: '12px 16px' }}>
                       <span style={{
                         padding: '3px 10px',
