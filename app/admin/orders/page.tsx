@@ -36,23 +36,34 @@ const statusLabel: Record<string, string> = {
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
+  const [teknisiList, setTeknisiList] = useState<Teknisi[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('semua')
 
   async function fetchOrders() {
     const { data, error } = await supabase
       .from('orders')
-      .select('*, klien(nama, nomor_wa)')
+      .select('*, klien(nama, nomor_wa), teknisi(nama)')
       .order('created_at', { ascending: false })
 
-    if (!error && data) setOrders(data as Order[])
+    if (!error && data) setOrders(data as unknown as Order[])
     setLoading(false)
   }
 
-  useEffect(() => { fetchOrders() }, [])
+  async function fetchTeknisi() {
+    const { data } = await supabase.from('teknisi').select('id, nama').eq('aktif', true).order('nama')
+    if (data) setTeknisiList(data)
+  }
+
+  useEffect(() => { fetchOrders(); fetchTeknisi() }, [])
 
   async function ubahStatus(id: string, status: string) {
     await supabase.from('orders').update({ status }).eq('id', id)
+    fetchOrders()
+  }
+
+  async function assignTeknisi(id: string, teknisiId: string) {
+    await supabase.from('orders').update({ teknisi_id: teknisiId || null }).eq('id', id)
     fetchOrders()
   }
 
@@ -113,6 +124,7 @@ export default function OrdersPage() {
                 <th style={{ padding: '12px 16px', textAlign: 'left', color: '#64748b', fontWeight: 500 }}>Layanan</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', color: '#64748b', fontWeight: 500 }}>Jadwal</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', color: '#64748b', fontWeight: 500 }}>Status</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left', color: '#64748b', fontWeight: 500 }}>Teknisi</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', color: '#64748b', fontWeight: 500 }}>Ubah Status</th>
               </tr>
             </thead>
@@ -124,25 +136,42 @@ export default function OrdersPage() {
                     <div style={{ fontSize: '12px', color: '#94a3b8' }}>{order.klien?.nomor_wa ?? '-'}</div>
                   </td>
                   <td style={{ padding: '12px 16px', color: '#1e293b' }}>{order.jenis_layanan}</td>
-                  <td style={{ padding: '12px 16px', color: '#64748b' }}>
-                    {new Date(order.tanggal_jadwal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </td>
                   <td style={{ padding: '12px 16px' }}>
-                    <span style={{
-                      padding: '3px 10px',
-                      borderRadius: '20px',
-                      fontSize: '12px',
-                      fontWeight: 500,
-                      background: statusColor[order.status]?.bg ?? '#f1f5f9',
-                      color: statusColor[order.status]?.color ?? '#64748b',
-                    }}>
-                      {statusLabel[order.status] ?? order.status}
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px 16px' }}>
-                    <select
-                      value={order.status}
-                      onChange={(e) => ubahStatus(order.id, e.target.value)}
+                      <span style={{
+                        padding: '3px 10px',
+                        borderRadius: '20px',
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        background: statusColor[order.status]?.bg ?? '#f1f5f9',
+                        color: statusColor[order.status]?.color ?? '#64748b',
+                      }}>
+                        {statusLabel[order.status] ?? order.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <select
+                        value={order.teknisi_id ?? ''}
+                        onChange={(e) => assignTeknisi(order.id, e.target.value)}
+                        style={{
+                          padding: '6px 10px',
+                          borderRadius: '6px',
+                          border: '1px solid #e2e8f0',
+                          fontSize: '13px',
+                          color: order.teknisi_id ? '#1e293b' : '#94a3b8',
+                          background: '#fff',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <option value="">Belum ditugaskan</option>
+                        {teknisiList.map(t => (
+                          <option key={t.id} value={t.id}>{t.nama}</option>
+                        ))}
+                      </select>
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <select
+                        value={order.status}
+                        onChange={(e) => ubahStatus(order.id, e.target.value)}
                       style={{
                         padding: '6px 10px',
                         borderRadius: '6px',
