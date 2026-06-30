@@ -210,7 +210,7 @@ export default function TeknisiPage() {
                       <select onChange={(e) => assignTeknisi(o.id, e.target.value)} defaultValue="" style={{
                         padding: '6px 10px', borderRadius: '6px', border: '1px solid #e2e8f0', fontSize: '13px', cursor: 'pointer',
                       }}>
-                        <option value="">-- Pilih teknisi --</option>
+                        <option value="">-- Pilih teknisimu --</option>
                         {teknisiList.filter(t => t.aktif).map(t => (
                           <option key={t.id} value={t.id}>{t.nama}</option>
                         ))}
