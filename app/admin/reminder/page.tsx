@@ -14,7 +14,7 @@ export default function ReminderPage() {
     const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     
-    const res = await fetch(`${projectUrl}/functions/v1/wa-reminder`, {
+    const res = await fetch(`${projectUrl}/functions/v1/smart-api`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${anonKey}`,
