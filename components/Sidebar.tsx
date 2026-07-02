@@ -12,6 +12,7 @@ const menus = [
   { label: 'Invoice', href: '/admin/invoice', icon: '🧾' },
   { label: 'Stok', href: '/admin/stok', icon: '📦' },
   { label: 'Laporan', href: '/admin/laporan', icon: '📈' },
+  { label: 'WA Reminder', href: '/admin/reminder', icon: '📲' },
   { label: 'Pengaturan', href: '/admin/pengaturan', icon: '⚙️' },
 ]
 
