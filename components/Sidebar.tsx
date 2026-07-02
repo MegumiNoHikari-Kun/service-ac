@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase'
 const menus = [
   { label: 'Dashboard', href: '/admin/dashboard', icon: '📊' },
   { label: 'Daftar Order', href: '/admin/orders', icon: '📋' },
-  { label: 'Booking Baru', href: '/booking', icon: '➕' },
+  { label: 'Booking Baru', href: '/admin/booking', icon: '➕' },
   { label: 'Data Klien', href: '/admin/klien', icon: '👥' },
   { label: 'Teknisi', href: '/admin/teknisi', icon: '🔧' },
   { label: 'Invoice', href: '/admin/invoice', icon: '🧾' },
