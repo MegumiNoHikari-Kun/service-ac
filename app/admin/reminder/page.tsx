@@ -11,7 +11,19 @@ export default function ReminderPage() {
     setLoading(true)
     setResult(null)
 
-    const { data, error } = await supabase.functions.invoke('wa-reminder')
+    const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    
+    const res = await fetch(`${projectUrl}/functions/v1/wa-reminder`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${anonKey}`,
+        'Content-Type': 'application/json',
+      },
+    })
+    
+    const data = await res.json()
+    const error = !res.ok ? { message: data.error ?? 'Gagal memanggil function' } : null
 
     setLoading(false)
     if (error) {
