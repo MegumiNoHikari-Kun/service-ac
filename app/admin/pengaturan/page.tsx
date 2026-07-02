@@ -128,7 +128,7 @@ export default function PengaturanPage() {
             onChange={e => setData({ ...data, template_wa: e.target.value })}
             rows={4}
             style={{ ...inputStyle, resize: 'vertical' }}
-            placeholder="Halo {nama}, sudah 3 bulan sejak servis terakhir..."
+            placeholder="Halo {nama}, kami dari Suejuk AC ingin menginformasikan..."
           />
           <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '6px' }}>
             Variabel: <code>{'{nama}'}</code> = nama klien, <code>{'{layanan}'}</code> = jenis layanan terakhir, <code>{'{tanggal}'}</code> = tanggal servis terakhir
