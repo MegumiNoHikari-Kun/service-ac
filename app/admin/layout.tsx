@@ -20,7 +20,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     }
     checkAuth()
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       if (!session && pathname !== '/admin/login') {
         router.push('/admin/login')
       }
