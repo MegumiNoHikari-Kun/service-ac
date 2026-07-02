@@ -10,6 +10,9 @@ const menus = [
   { label: 'Data Klien', href: '/admin/klien', icon: '👥' },
   { label: 'Teknisi', href: '/admin/teknisi', icon: '🔧' },
   { label: 'Invoice', href: '/admin/invoice', icon: '🧾' },
+  { label: 'Stok', href: '/admin/stok', icon: '📦' },
+  { label: 'Laporan', href: '/admin/laporan', icon: '📈' },
+  { label: 'Pengaturan', href: '/admin/pengaturan', icon: '⚙️' },
 ]
 
 export default function Sidebar() {
