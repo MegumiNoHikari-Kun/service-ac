@@ -21,12 +21,20 @@ export default function PengaturanPage() {
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
-    async function fetch() {
-      const { data: d } = await supabase.from('pengaturan').select('*').single()
+    async function fetchData() {
+      const { data: d, error } = await supabase
+        .from('pengaturan')
+        .select('*')
+        .limit(1)
+        .maybeSingle()
+      
+      console.log('pengaturan data:', d)
+      console.log('pengaturan error:', error)
+      
       if (d) setData(d)
       setLoading(false)
     }
-    fetch()
+    fetchData()
   }, [])
 
   async function handleSave(e: React.FormEvent) {
