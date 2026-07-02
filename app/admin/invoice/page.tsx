@@ -8,6 +8,7 @@ type Order = {
   jenis_layanan: string
   tanggal_jadwal: string
   status: string
+  status_bayar: string
   total_biaya: number
   catatan: string
   created_at: string
@@ -19,25 +20,31 @@ export default function InvoicePage() {
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<Order | null>(null)
   const [biaya, setBiaya] = useState('')
+  const [filter, setFilter] = useState('semua')
 
-  useEffect(() => {
-    async function fetch() {
-      const { data } = await supabase
-        .from('orders')
-        .select('*, klien(nama, nomor_wa, alamat)')
-        .eq('status', 'selesai')
-        .order('created_at', { ascending: false })
-      if (data) setOrders(data as Order[])
-      setLoading(false)
-    }
-    fetch()
-  }, [])
+  async function fetchOrders() {
+    const { data } = await supabase
+      .from('orders')
+      .select('*, klien(nama, nomor_wa, alamat)')
+      .eq('status', 'selesai')
+      .order('created_at', { ascending: false })
+    if (data) setOrders(data as Order[])
+    setLoading(false)
+  }
+
+  useEffect(() => { fetchOrders() }, [])
 
   async function simpanBiaya(id: string) {
     await supabase.from('orders').update({ total_biaya: parseInt(biaya) }).eq('id', id)
     setOrders(prev => prev.map(o => o.id === id ? { ...o, total_biaya: parseInt(biaya) } : o))
     setSelected(prev => prev ? { ...prev, total_biaya: parseInt(biaya) } : null)
     setBiaya('')
+  }
+
+  async function ubahStatusBayar(id: string, status_bayar: string) {
+    await supabase.from('orders').update({ status_bayar }).eq('id', id)
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, status_bayar } : o))
+    setSelected(prev => prev ? { ...prev, status_bayar } : null)
   }
 
   function cetakInvoice(order: Order) {
@@ -56,12 +63,11 @@ Layanan : ${order.jenis_layanan}
 Catatan : ${order.catatan ?? '-'}
 
 TOTAL   : Rp ${(order.total_biaya ?? 0).toLocaleString('id-ID')}
-Status  : LUNAS
+Status  : ${order.status_bayar === 'lunas' ? 'LUNAS' : 'BELUM LUNAS'}
 
 Terima kasih telah menggunakan Suejuk AC!
 Garansi servis 30 hari.
     `.trim()
-
     const win = window.open('', '_blank')
     if (win) {
       win.document.write(`<pre style="font-family:monospace;padding:2rem;font-size:14px">${isi}</pre>`)
@@ -71,27 +77,52 @@ Garansi servis 30 hari.
 
   function kirimWA(order: Order) {
     const tgl = new Date(order.tanggal_jadwal).toLocaleDateString('id-ID')
-    const pesan = `Halo ${order.klien?.nama}, terima kasih sudah menggunakan Suejuk AC!\n\nLayanan: ${order.jenis_layanan}\nTanggal: ${tgl}\nTotal: Rp ${(order.total_biaya ?? 0).toLocaleString('id-ID')}\n\nGaransi servis 30 hari. Terima kasih! 🙏`
+    const pesan = `Halo ${order.klien?.nama}, terima kasih sudah menggunakan Suejuk AC!\n\nLayanan: ${order.jenis_layanan}\nTanggal: ${tgl}\nTotal: Rp ${(order.total_biaya ?? 0).toLocaleString('id-ID')}\nStatus: ${order.status_bayar === 'lunas' ? '✅ Lunas' : '⏳ Belum Lunas'}\n\nGaransi servis 30 hari. Terima kasih! 🙏`
     window.open(`https://wa.me/${order.klien?.nomor_wa}?text=${encodeURIComponent(pesan)}`, '_blank')
   }
 
+  const belumLunas = orders.filter(o => o.status_bayar !== 'lunas')
+  const filtered = filter === 'belum_lunas' ? belumLunas : orders
+
+  const filterBtn = (val: string, label: string, count?: number) => (
+    <button onClick={() => setFilter(val)} style={{
+      padding: '6px 14px', borderRadius: '20px', border: '1px solid', fontSize: '13px', cursor: 'pointer',
+      fontWeight: filter === val ? 600 : 400,
+      background: filter === val ? '#3b82f6' : '#fff',
+      color: filter === val ? '#fff' : '#64748b',
+      borderColor: filter === val ? '#3b82f6' : '#e2e8f0',
+    }}>
+      {label}{count !== undefined ? ` (${count})` : ''}
+    </button>
+  )
+
   return (
-    <div style={{ padding: '2rem', maxWidth: '960px' }}>
-      <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1e293b', marginBottom: '0.25rem' }}>Invoice</h1>
+    <div style={{ padding: '2rem', maxWidth: '1000px' }}>
+      <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#1e293b', marginBottom: '0.25rem' }}>Invoice & Pembayaran</h1>
       <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '1.5rem' }}>Order selesai — {orders.length} invoice</p>
+
+      {belumLunas.length > 0 && (
+        <div style={{ background: '#fef9c3', border: '1px solid #fde047', borderRadius: '10px', padding: '12px 16px', marginBottom: '1.5rem', fontSize: '13px', color: '#854d0e' }}>
+          ⚠️ <strong>{belumLunas.length} tagihan</strong> belum lunas — total Rp {belumLunas.reduce((s, o) => s + (o.total_biaya || 0), 0).toLocaleString('id-ID')}
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '1.5rem' }}>
+        {filterBtn('semua', 'Semua', orders.length)}
+        {filterBtn('belum_lunas', '⏳ Belum Lunas', belumLunas.length)}
+      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: selected ? '1fr 1fr' : '1fr', gap: '1rem' }}>
 
-        {/* LIST ORDER SELESAI */}
         <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden' }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0', fontWeight: 600, fontSize: '14px', color: '#1e293b' }}>
-            Order selesai
+            Daftar Invoice
           </div>
           {loading ? (
             <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>Memuat...</div>
-          ) : orders.length === 0 ? (
-            <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>Belum ada order selesai</div>
-          ) : orders.map((order, i) => (
+          ) : filtered.length === 0 ? (
+            <div style={{ padding: '2rem', textAlign: 'center', color: '#94a3b8' }}>Tidak ada data</div>
+          ) : filtered.map((order, i) => (
             <div
               key={order.id}
               onClick={() => { setSelected(order.id === selected?.id ? null : order); setBiaya(String(order.total_biaya ?? '')) }}
@@ -102,15 +133,19 @@ Garansi servis 30 hari.
                   <div style={{ fontWeight: 500, fontSize: '14px', color: '#1e293b' }}>{order.klien?.nama ?? '-'}</div>
                   <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>{order.jenis_layanan} · {new Date(order.tanggal_jadwal).toLocaleDateString('id-ID')}</div>
                 </div>
-                <div style={{ fontWeight: 600, fontSize: '14px', color: order.total_biaya ? '#16a34a' : '#94a3b8' }}>
-                  {order.total_biaya ? `Rp ${order.total_biaya.toLocaleString('id-ID')}` : 'Belum diisi'}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                  <div style={{ fontWeight: 600, fontSize: '14px', color: order.total_biaya ? '#1e293b' : '#94a3b8' }}>
+                    {order.total_biaya ? `Rp ${order.total_biaya.toLocaleString('id-ID')}` : 'Belum diisi'}
+                  </div>
+                  <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '20px', fontWeight: 500, background: order.status_bayar === 'lunas' ? '#dcfce7' : '#fef9c3', color: order.status_bayar === 'lunas' ? '#16a34a' : '#ca8a04' }}>
+                    {order.status_bayar === 'lunas' ? '✓ Lunas' : '⏳ Belum Lunas'}
+                  </span>
                 </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* DETAIL INVOICE */}
         {selected && (
           <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1.25rem', alignSelf: 'start' }}>
             <div style={{ fontWeight: 600, fontSize: '16px', color: '#1e293b', marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid #f1f5f9' }}>
@@ -133,16 +168,11 @@ Garansi servis 30 hari.
               ))}
             </div>
 
-            <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '12px', marginBottom: '1rem' }}>
+            {/* TOTAL BIAYA */}
+            <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '12px', marginBottom: '10px' }}>
               <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>Total biaya</div>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <input
-                  type="number"
-                  placeholder="contoh: 150000"
-                  value={biaya}
-                  onChange={e => setBiaya(e.target.value)}
-                  style={{ flex: 1, padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '14px', outline: 'none' }}
-                />
+                <input type="number" placeholder="contoh: 150000" value={biaya} onChange={e => setBiaya(e.target.value)} style={{ flex: 1, padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '14px', outline: 'none' }} />
                 <button onClick={() => simpanBiaya(selected.id)} style={{ padding: '8px 14px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
                   Simpan
                 </button>
@@ -152,6 +182,25 @@ Garansi servis 30 hari.
                   Rp {selected.total_biaya.toLocaleString('id-ID')}
                 </div>
               )}
+            </div>
+
+            {/* STATUS BAYAR */}
+            <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '12px', marginBottom: '10px' }}>
+              <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '6px' }}>Status pembayaran</div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => ubahStatusBayar(selected.id, 'belum_lunas')}
+                  style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid', fontSize: '13px', fontWeight: 500, cursor: 'pointer', background: selected.status_bayar !== 'lunas' ? '#fef9c3' : '#fff', color: selected.status_bayar !== 'lunas' ? '#ca8a04' : '#94a3b8', borderColor: selected.status_bayar !== 'lunas' ? '#fde047' : '#e2e8f0' }}
+                >
+                  ⏳ Belum Lunas
+                </button>
+                <button
+                  onClick={() => ubahStatusBayar(selected.id, 'lunas')}
+                  style={{ flex: 1, padding: '8px', borderRadius: '6px', border: '1px solid', fontSize: '13px', fontWeight: 500, cursor: 'pointer', background: selected.status_bayar === 'lunas' ? '#dcfce7' : '#fff', color: selected.status_bayar === 'lunas' ? '#16a34a' : '#94a3b8', borderColor: selected.status_bayar === 'lunas' ? '#86efac' : '#e2e8f0' }}
+                >
+                  ✓ Lunas
+                </button>
+              </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
